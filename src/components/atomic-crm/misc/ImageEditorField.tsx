@@ -60,7 +60,9 @@ const ImageEditorField = (props: ImageEditorFieldProps) => {
           ) : (
             <img
               {...commonProps}
-              className="cursor-pointer object-cover"
+              className={`cursor-pointer ${
+                isSquare(props.aspectRatio) ? "object-cover" : "object-contain"
+              }`}
               style={{ width, height }}
               alt={translate("crm.image_editor.editable_content", {
                 _: "Editable content",
@@ -178,9 +180,11 @@ const ImageEditorDialog = (props: ImageEditorDialogProps) => {
             <Cropper
               ref={cropperRef}
               src={imageSrc}
-              aspectRatio={1}
+              aspectRatio={props.aspectRatio ?? 1}
+              // Free-ratio images (e.g. wide logos) start fully selected and can be trimmed.
+              autoCropArea={isSquare(props.aspectRatio) ? 0.8 : 1}
               guides={false}
-              cropBoxResizable={false}
+              cropBoxResizable={!isSquare(props.aspectRatio)}
             />
           )}
         </div>
@@ -198,10 +202,16 @@ const ImageEditorDialog = (props: ImageEditorDialogProps) => {
   );
 };
 
+/** Square crop unless a different ratio, or a free one (NaN), was requested. */
+const isSquare = (aspectRatio: number | undefined) =>
+  aspectRatio === undefined || aspectRatio === 1;
+
 export default ImageEditorField;
 
 export interface ImageEditorFieldProps {
   source: string;
+  /** Crop ratio (width / height). Defaults to 1 (square); NaN allows any ratio. */
+  aspectRatio?: number;
   width?: number;
   height?: number;
   type?: "avatar" | "image";

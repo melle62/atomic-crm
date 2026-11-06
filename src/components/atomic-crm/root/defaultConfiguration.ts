@@ -1,4 +1,7 @@
-import type { ConfigurationContextValue } from "./ConfigurationContext";
+import type {
+  ConfigurationContextValue,
+  LogoStyle,
+} from "./ConfigurationContext";
 // Import the logos as module assets so Vite resolves their URL relative to the
 // JS chunk (import.meta.url), not the current route. A plain "./logos/..." path
 // breaks on nested routes like /oauth/consent and under a deployment sub-path.
@@ -7,6 +10,8 @@ import lightModeLogo from "./logos/logo_atomic_crm_light.svg";
 
 export const defaultDarkModeLogo = darkModeLogo;
 export const defaultLightModeLogo = lightModeLogo;
+
+export const defaultLogoStyle: LogoStyle = "icon";
 
 export const defaultCurrency = "USD";
 
@@ -75,4 +80,5 @@ export const defaultConfiguration: ConfigurationContextValue = {
   title: defaultTitle,
   darkModeLogo: defaultDarkModeLogo,
   lightModeLogo: defaultLightModeLogo,
+  logoStyle: defaultLogoStyle,
 };

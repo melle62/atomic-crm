@@ -47,6 +47,7 @@ import {
   defaultDealPipelineStatuses,
   defaultDealStages,
   defaultLightModeLogo,
+  defaultLogoStyle,
   defaultNoteStatuses,
   defaultTaskTypes,
   defaultTitle,
@@ -92,6 +93,7 @@ export type CRMProps = {
  * @param {RaThemeOptions} lightTheme - The theme to use when the application is in light mode.
  * @param {string} darkModeLogo - Logo shown in dark mode and on the auth pages. Must be an imported asset, an absolute URL, or a data URI — never a route-relative path like "./logos/x.svg", which breaks on nested routes such as /oauth/consent (issue #291).
  * @param {string} lightModeLogo - Logo shown in light mode. Same rule as darkModeLogo: imported asset, absolute URL, or data URI only.
+ * @param {LogoStyle} logoStyle - "icon" (default) shows a small logo next to the title; "horizontal" shows a wide logo on its own, without the title.
  * @param {NoteStatus[]} noteStatuses - The statuses of notes used in the application.
  * @param {LabeledValue[]} taskTypes - The types of tasks used in the application.
  * @param {string} title - The title of the CRM application.
@@ -126,6 +128,7 @@ export const CRM = ({
   dealStages = defaultDealStages,
   darkModeLogo = defaultDarkModeLogo,
   lightModeLogo = defaultLightModeLogo,
+  logoStyle = defaultLogoStyle,
   noteStatuses = defaultNoteStatuses,
   taskTypes = defaultTaskTypes,
   title = defaultTitle,
@@ -165,6 +168,7 @@ export const CRM = ({
         title,
         darkModeLogo,
         lightModeLogo,
+        logoStyle,
       } satisfies ConfigurationContextValue);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

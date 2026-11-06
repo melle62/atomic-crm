@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { toSlug } from "@/lib/toSlug";
 import { ArrayInput } from "@/components/admin/array-input";
 import { AutocompleteInput } from "@/components/admin/autocomplete-input";
+import { RadioButtonGroupInput } from "@/components/admin/radio-button-group-input";
 import { SimpleFormIterator } from "@/components/admin/simple-form-iterator";
 import { TextInput } from "@/components/admin/text-input";
 
@@ -28,6 +29,11 @@ import {
 } from "../root/ConfigurationContext";
 import { defaultConfiguration } from "../root/defaultConfiguration";
 import { SettingsTags } from "./SettingsTags";
+
+const LOGO_STYLE_CHOICES = [
+  { id: "icon", name: "crm.settings.logo_style.icon" },
+  { id: "horizontal", name: "crm.settings.logo_style.horizontal" },
+];
 
 const SECTIONS = [
   {
@@ -121,6 +127,7 @@ const transformFormValues = (data: Record<string, any>) => ({
     title: data.title,
     lightModeLogo: data.lightModeLogo,
     darkModeLogo: data.darkModeLogo,
+    logoStyle: data.logoStyle,
     currency: data.currency,
     companySectors: ensureValues(data.companySectors),
     dealCategories: ensureValues(data.dealCategories),
@@ -169,6 +176,7 @@ const SettingsForm = () => {
       title: config.title,
       lightModeLogo: { src: config.lightModeLogo },
       darkModeLogo: { src: config.darkModeLogo },
+      logoStyle: config.logoStyle,
       currency: config.currency,
       companySectors: config.companySectors,
       dealCategories: config.dealCategories,
@@ -197,6 +205,12 @@ const SettingsFormFields = () => {
     formState: { isSubmitting },
   } = useFormContext();
 
+  const isHorizontalLogo = watch("logoStyle") === "horizontal";
+  // A horizontal logo is previewed wide and uploaded without a forced square crop.
+  const logoPreviewSize = isHorizontalLogo
+    ? { width: 200, height: 60 }
+    : { width: 100, height: 100 };
+  const logoAspectRatio = isHorizontalLogo ? Number.NaN : 1;
   const dealStages = watch("dealStages");
   const dealPipelineStatuses: string[] = watch("dealPipelineStatuses") ?? [];
   const stageDisplayName = translate("crm.settings.validation.entities.stages");
@@ -278,15 +292,25 @@ const SettingsFormFields = () => {
               {translate("crm.settings.sections.branding")}
             </h2>
             <TextInput source="title" label="crm.settings.app_title" />
-            <div className="flex gap-8">
+            <RadioButtonGroupInput
+              source="logoStyle"
+              label="crm.settings.logo_style.label"
+              choices={LOGO_STYLE_CHOICES}
+            />
+            {isHorizontalLogo && (
+              <p className="text-sm text-muted-foreground">
+                {translate("crm.settings.logo_style.horizontal_hint")}
+              </p>
+            )}
+            <div className="flex flex-wrap gap-8">
               <div className="flex flex-col items-center gap-1">
                 <p className="text-sm text-muted-foreground">
                   {translate("crm.settings.light_mode_logo")}
                 </p>
                 <ImageEditorField
                   source="lightModeLogo"
-                  width={100}
-                  height={100}
+                  {...logoPreviewSize}
+                  aspectRatio={logoAspectRatio}
                   linkPosition="bottom"
                   backgroundImageColor="#f5f5f5"
                 />
@@ -297,8 +321,8 @@ const SettingsFormFields = () => {
                 </p>
                 <ImageEditorField
                   source="darkModeLogo"
-                  width={100}
-                  height={100}
+                  {...logoPreviewSize}
+                  aspectRatio={logoAspectRatio}
                   linkPosition="bottom"
                   backgroundImageColor="#1a1a1a"
                 />
