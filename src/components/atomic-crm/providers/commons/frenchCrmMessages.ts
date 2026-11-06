@@ -540,6 +540,13 @@ export const frenchCrmMessages = {
         stages: "Étapes",
       },
       light_mode_logo: "Logo du mode clair",
+      logo_style: {
+        label: "Style du logo",
+        icon: "Petite icône à côté du titre de l'application",
+        horizontal: "Logo horizontal (remplace le titre de l'application)",
+        horizontal_hint:
+          "Importez le logo horizontal complet, par exemple le symbole et le nom côte à côte. Il est affiché seul : le titre de l'application n'est pas répété à côté.",
+      },
       notes: {
         statuses: "Statuts",
       },

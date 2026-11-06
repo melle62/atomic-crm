@@ -6,6 +6,14 @@ import { defaultConfiguration } from "./defaultConfiguration";
 
 export const CONFIGURATION_STORE_KEY = "app.configuration";
 
+/**
+ * How the logo is shown in the header and on the auth pages:
+ * - "icon": a small square logo followed by the app title (default)
+ * - "horizontal": a wide logo (e.g. symbol + wordmark) shown on its own,
+ *   without the app title next to it
+ */
+export type LogoStyle = "icon" | "horizontal";
+
 export interface ConfigurationContextValue {
   companySectors: LabeledValue[];
   currency: string;
@@ -17,6 +25,7 @@ export interface ConfigurationContextValue {
   title: string;
   darkModeLogo: string;
   lightModeLogo: string;
+  logoStyle: LogoStyle;
 }
 
 export const useConfigurationContext = () => {

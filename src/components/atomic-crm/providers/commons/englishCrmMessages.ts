@@ -531,6 +531,13 @@ export const englishCrmMessages = {
         stages: "Stages",
       },
       light_mode_logo: "Light Mode Logo",
+      logo_style: {
+        label: "Logo style",
+        icon: "Small icon next to the app title",
+        horizontal: "Horizontal logo (replaces the app title)",
+        horizontal_hint:
+          "Upload the full horizontal logo, e.g. symbol and name side by side. It's shown on its own, so the app title isn't repeated next to it.",
+      },
       notes: {
         statuses: "Statuses",
       },
