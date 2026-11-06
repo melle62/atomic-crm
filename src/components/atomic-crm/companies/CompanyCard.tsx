@@ -8,6 +8,7 @@ import {
 } from "ra-core";
 import { ReferenceManyField } from "@/components/admin/reference-many-field";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { Avatar as ContactAvatar } from "../contacts/Avatar";
 import { useConfigurationContext } from "../root/ConfigurationContext";
@@ -19,7 +20,10 @@ export const CompanyCard = (props: { record?: Company }) => {
   const record = useRecordContext<Company>(props);
   const translate = useTranslate();
   const { companySectors } = useConfigurationContext();
+  const { selectedIds, onToggleItem } = useListContext<Company>();
   if (!record) return null;
+
+  const isSelected = selectedIds?.includes(record.id) ?? false;
 
   const sector = companySectors.find((s) => s.value === record.sector);
   const sectorLabel = sector?.label;
@@ -33,7 +37,19 @@ export const CompanyCard = (props: { record?: Company }) => {
       })}
       className="no-underline"
     >
-      <Card className="h-[200px] flex flex-col justify-between p-4 hover:bg-muted">
+      <Card className="relative h-[200px] flex flex-col justify-between p-4 hover:bg-muted">
+        {onToggleItem && (
+          <div
+            className="absolute top-1 left-1 p-2 cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleItem(record.id);
+            }}
+          >
+            <Checkbox className="cursor-pointer" checked={isSelected} />
+          </div>
+        )}
         <div className="flex flex-col items-center gap-1">
           <CompanyAvatar />
           <div className="text-center mt-1">

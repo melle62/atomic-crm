@@ -1,4 +1,8 @@
 import { useGetIdentity, useListContext, useTranslate } from "ra-core";
+import { BulkActionsToolbar } from "@/components/admin/bulk-actions-toolbar";
+import { BulkDeleteButton } from "@/components/admin/bulk-delete-button";
+import { BulkExportButton } from "@/components/admin/bulk-export-button";
+import { SelectAllButton } from "@/components/admin/select-all-button";
 import { CreateButton } from "@/components/admin/create-button";
 import { ExportButton } from "@/components/admin/export-button";
 import { List } from "@/components/admin/list";
@@ -40,6 +44,11 @@ const CompanyListLayout = () => {
       <div className="flex flex-col flex-1 gap-4">
         <ImageList />
       </div>
+      <BulkActionsToolbar>
+        <SelectAllButton />
+        <BulkExportButton />
+        <BulkDeleteButton />
+      </BulkActionsToolbar>
     </div>
   );
 };
