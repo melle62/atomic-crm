@@ -190,6 +190,16 @@ jobs:
                   npx supabase secrets set "VITE_INBOUND_EMAIL=$VITE_INBOUND_EMAIL"
                   npx supabase secrets set "VITE_ATTACHMENTS_BUCKET=$VITE_ATTACHMENTS_BUCKET"
 
+            # The functions' auth middleware builds a client with this key; without
+            # it every authenticated function call fails with "supabaseKey is required".
+            - if: ${{ env.IS_SUPABASE_CONFIGURED }}
+              name: 📡 Push supabase publishable key secret
+              env:
+                  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+                  SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+                  SB_PUBLISHABLE_KEY: ${{ secrets.SB_PUBLISHABLE_KEY }}
+              run: npx supabase secrets set "SB_PUBLISHABLE_KEY=$SB_PUBLISHABLE_KEY"
+
             - if: ${{ env.IS_SUPABASE_CONFIGURED }}
               name: 📡 Deploy supabase functions
               env:
