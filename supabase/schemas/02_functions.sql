@@ -472,3 +472,87 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+
+CREATE OR REPLACE FUNCTION "public"."handle_company_location_changed"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+begin
+    if tg_op = 'INSERT' then
+        -- Coordinates given on create (e.g. an import) count as a manual pin.
+        if new.latitude is not null and new.longitude is not null and new.geocode_status = 'pending' then
+            new.geocode_status := 'manual';
+            new.geocode_precision := 'manual';
+            new.geocoded_at := now();
+        end if;
+        return new;
+    end if;
+
+    -- A manual pin is never replaced by re-geocoding, even when the address changes.
+    if new.geocode_status = 'manual' then
+        if new.latitude is null or new.longitude is null then
+            new.geocode_status := 'pending';
+            new.geocode_precision := null;
+            new.geocoded_at := null;
+        else
+            new.geocode_precision := 'manual';
+        end if;
+        return new;
+    end if;
+
+    if (new.address, new.zipcode, new.city, new.state_abbr, new.country)
+        is distinct from (old.address, old.zipcode, old.city, old.state_abbr, old.country) then
+        new.geocode_status := 'pending';
+        new.latitude := null;
+        new.longitude := null;
+        new.geocode_precision := null;
+        new.geocode_error := null;
+        new.geocoded_at := null;
+    elsif new.geocode_status = 'pending' and old.geocode_status <> 'pending' then
+        -- Re-queued by hand: make it claimable right away.
+        new.geocoded_at := null;
+    end if;
+    return new;
+end;
+$$;
+
+CREATE OR REPLACE FUNCTION "public"."geocode_reserve_slot"("p_interval_ms" integer) RETURNS integer
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+declare
+    slot timestamp with time zone;
+begin
+    insert into public.geocode_rate_limit (id) values (1) on conflict (id) do nothing;
+    -- The row lock serializes concurrent callers: each one gets the next free slot.
+    update public.geocode_rate_limit
+       set next_slot_at = greatest(clock_timestamp(), next_slot_at) + make_interval(secs => p_interval_ms / 1000.0)
+     where id = 1
+    returning next_slot_at - make_interval(secs => p_interval_ms / 1000.0) into slot;
+    return greatest(0, ceil(extract(epoch from (slot - clock_timestamp())) * 1000))::integer;
+end;
+$$;
+
+CREATE OR REPLACE FUNCTION "public"."geocode_claim_next_company"("p_stale_after_seconds" integer DEFAULT 300) RETURNS TABLE("id" bigint, "address" "text", "zipcode" "text", "city" "text", "state_abbr" "text", "country" "text")
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+begin
+    -- geocoded_at doubles as a claim marker while the row is pending, so two
+    -- concurrent runs never work on the same company. A stale claim (crashed run)
+    -- becomes claimable again after p_stale_after_seconds.
+    return query
+    update public.companies c
+       set geocoded_at = clock_timestamp()
+     where c.id = (
+        select c2.id
+          from public.companies c2
+         where c2.geocode_status = 'pending'
+           and (c2.geocoded_at is null or c2.geocoded_at < clock_timestamp() - make_interval(secs => p_stale_after_seconds))
+         order by c2.id
+         limit 1
+           for update skip locked
+     )
+    returning c.id, c.address, c.zipcode, c.city, c.state_abbr, c.country;
+end;
+$$;

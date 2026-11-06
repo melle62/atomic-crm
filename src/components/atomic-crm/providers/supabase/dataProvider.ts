@@ -23,6 +23,11 @@ import { ATTACHMENTS_BUCKET } from "../commons/attachments";
 import { getIsInitialized } from "./authProvider";
 import { searchDealCategories } from "./searchDealCategories";
 import { getSupabaseClient } from "./supabase";
+import { withGeoFilters } from "../../geo/withGeoFilters";
+import type {
+  GeocodeRunResult,
+  PlaceSearchResult,
+} from "../../geo/geocodingTypes";
 
 const getBaseDataProvider = () =>
   supabaseDataProvider({
@@ -252,6 +257,15 @@ const getDataProviderWithCustomMethods = () => {
       }
       return data ?? [];
     },
+    async geocodeCompanies(): Promise<GeocodeRunResult> {
+      return invokeGeocode<GeocodeRunResult>({ action: "process" });
+    },
+    async searchPlace(query: string): Promise<PlaceSearchResult | null> {
+      const { result } = await invokeGeocode<{
+        result: PlaceSearchResult | null;
+      }>({ action: "search", query });
+      return result;
+    },
     async mergeContacts(sourceId: Identifier, targetId: Identifier) {
       const { data, error } = await getSupabaseClient().functions.invoke(
         "merge_contacts",
@@ -386,6 +400,14 @@ const lifeCycleCallbacks: ResourceCallbacks[] = [
     beforeUpdate: async (params) => {
       return await processCompanyLogo(params);
     },
+    afterCreate: async (result) => {
+      geocodeIfPending(result.data);
+      return result;
+    },
+    afterUpdate: async (result) => {
+      geocodeIfPending(result.data);
+      return result;
+    },
   },
   {
     resource: "contacts_summary",
@@ -414,10 +436,43 @@ export const getDataProvider = () => {
       "Please set the VITE_SB_PUBLISHABLE_KEY environment variable",
     );
   }
-  return withLifecycleCallbacks(
-    getDataProviderWithCustomMethods(),
-    lifeCycleCallbacks,
-  ) as CrmDataProvider;
+  return withGeoFilters(
+    withLifecycleCallbacks(
+      getDataProviderWithCustomMethods(),
+      lifeCycleCallbacks,
+    ) as CrmDataProvider,
+  );
+};
+
+const invokeGeocode = async <T>(body: Record<string, unknown>): Promise<T> => {
+  const { data, error } = await getSupabaseClient().functions.invoke<T>(
+    "geocode",
+    { method: "POST", body },
+  );
+  if (error || !data) {
+    const details = await (async () => {
+      try {
+        return (await error?.context?.json()) ?? {};
+      } catch {
+        return {};
+      }
+    })();
+    console.error("geocode.error", error, details);
+    throw new Error(details?.message || "Geocoding failed");
+  }
+  return data;
+};
+
+/**
+ * The database queues a company for geocoding when its address changes; kick
+ * the server-side geocoder right away instead of waiting for the next run.
+ * Fire and forget: the save itself already succeeded.
+ */
+const geocodeIfPending = (company?: { geocode_status?: string }) => {
+  if (company?.geocode_status !== "pending") return;
+  invokeGeocode({ action: "process" }).catch((error) =>
+    console.error("Background geocoding failed", error),
+  );
 };
 
 const applyFullTextSearch = (columns: string[]) => (params: GetListParams) => {

@@ -31,6 +31,7 @@ import { DealEmpty } from "./DealEmpty";
 import { DealListContent } from "./DealListContent";
 import { DealShow } from "./DealShow";
 import { OnlyMineInput } from "./OnlyMineInput";
+import { RegionFilterButton } from "../geo/RegionFilter";
 
 const DealList = () => {
   const { identity } = useGetIdentity();
@@ -135,6 +136,7 @@ const DealLayout = () => {
 
 const DealActions = () => (
   <TopToolbar>
+    <RegionFilterButton layer="deals" />
     <FilterButton />
     <DataImportButton resource="deals" />
     <ExportButton />

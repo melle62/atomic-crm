@@ -6,7 +6,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { Home, ListTodo, Plus, Settings, Users } from "lucide-react";
+import {
+  Home,
+  ListTodo,
+  Map as MapIcon,
+  Plus,
+  Settings,
+  Users,
+} from "lucide-react";
 import { useTranslate } from "ra-core";
 import { Link, matchPath, useLocation, useMatch } from "react-router";
 import { ContactCreateSheet } from "../contacts/ContactCreateSheet";
@@ -29,6 +36,8 @@ export const MobileNavigation = () => {
     currentPath = "/tasks";
   } else if (matchPath("/deals/*", location.pathname)) {
     currentPath = "/deals";
+  } else if (matchPath("/map", location.pathname)) {
+    currentPath = "/map";
   } else {
     currentPath = false;
   }
@@ -75,6 +84,12 @@ export const MobileNavigation = () => {
             label={translate("resources.tasks.name", { smart_count: 2 })}
             isActive={currentPath === "/tasks"}
           />
+          <NavigationButton
+            href="/map"
+            Icon={MapIcon}
+            label={translate("crm.map.title")}
+            isActive={currentPath === "/map"}
+          />
           <SettingsButton />
         </>
       </div>
@@ -97,7 +112,8 @@ const NavigationButton = ({
     to={href}
     className={cn(
       buttonVariants({ variant: "ghost" }),
-      "flex-col gap-1 h-auto py-2 px-1 rounded-md w-16",
+      // w-14: six buttons must fit a 360px-wide phone
+      "flex-col gap-1 h-auto py-2 px-1 rounded-md w-14",
       isActive ? null : "text-muted-foreground",
     )}
   >

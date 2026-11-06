@@ -29,7 +29,38 @@ create table public.companies (
     description text,
     revenue text,
     tax_identifier text,
-    logo jsonb
+    logo jsonb,
+    -- Geocoding: filled by the `geocode` edge function, or by hand ('manual').
+    latitude double precision,
+    longitude double precision,
+    geocode_status text not null default 'pending',
+    geocode_precision text,
+    geocoded_at timestamp with time zone,
+    geocode_error text,
+    constraint companies_geocode_status_check check (geocode_status in ('pending', 'ok', 'failed', 'manual')),
+    constraint companies_geocode_precision_check check (geocode_precision is null or geocode_precision in ('address', 'zipcode', 'city', 'county', 'manual')),
+    constraint companies_latitude_check check (latitude is null or (latitude between -90 and 90)),
+    constraint companies_longitude_check check (longitude is null or (longitude between -180 and 180))
+);
+
+create index companies_geocode_status_idx on public.companies using btree (geocode_status);
+
+-- Cache of geocoder lookups (hits and misses), keyed by the normalized query.
+-- Server-only: RLS is on and no policy grants access to API roles.
+create table public.geocode_cache (
+    query_key text primary key,
+    latitude double precision,
+    longitude double precision,
+    display_name text,
+    created_at timestamp with time zone not null default now()
+);
+
+-- Single row holding the next free request slot, shared by every caller so the
+-- geocoder's rate limit holds across concurrent edge function invocations.
+create table public.geocode_rate_limit (
+    id integer not null default 1 primary key,
+    next_slot_at timestamp with time zone not null default now(),
+    constraint geocode_rate_limit_singleton check (id = 1)
 );
 
 create table public.contacts (

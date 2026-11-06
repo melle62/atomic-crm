@@ -15,6 +15,9 @@ alter table public.tasks enable row level security;
 alter table public.configuration enable row level security;
 alter table public.favicons_excluded_domains enable row level security;
 alter table public.user_invitations enable row level security;
+-- No policies: only the service role (geocode edge function) reads and writes these.
+alter table public.geocode_cache enable row level security;
+alter table public.geocode_rate_limit enable row level security;
 
 -- Companies
 create policy "Enable read access for authenticated users" on public.companies for select to authenticated using (true);

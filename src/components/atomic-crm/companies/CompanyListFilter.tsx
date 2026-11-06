@@ -6,6 +6,7 @@ import { SearchInput } from "@/components/admin/search-input";
 import { FilterCategory } from "../filters/FilterCategory";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { AccountManagerFilter } from "../sales/AccountManagerInput";
+import { RegionFilter } from "../geo/RegionFilter";
 import { getTranslatedCompanySizeLabel } from "./getTranslatedCompanySizeLabel";
 import { sizes } from "./sizes";
 
@@ -62,6 +63,8 @@ export const CompanyListFilter = () => {
         />
         <AccountManagerFilter className="w-full justify-between" />
       </FilterCategory>
+
+      <RegionFilter layer="companies" />
     </div>
   );
 };

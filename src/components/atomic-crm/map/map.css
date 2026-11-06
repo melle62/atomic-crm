@@ -1,0 +1,40 @@
+/* Map page markers and Leaflet overrides. Loaded with the lazy map chunk only. */
+.crm-map-marker {
+  background: transparent;
+  border: 0;
+}
+
+.crm-map-pin {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.45);
+}
+
+.crm-map-pin--draggable {
+  cursor: grab;
+  outline: 2px dashed rgb(0 0 0 / 0.5);
+  outline-offset: 2px;
+}
+
+.crm-map-picking .leaflet-container {
+  cursor: crosshair;
+}
+
+.leaflet-container {
+  font: inherit;
+  background: var(--muted);
+}
+
+.leaflet-popup-content {
+  margin: 10px 12px;
+  min-width: 180px;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--popover);
+  color: var(--popover-foreground);
+}

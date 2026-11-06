@@ -72,7 +72,17 @@ export type Company = {
   context_links?: string[];
   nb_contacts?: number;
   nb_deals?: number;
+  latitude?: number | null;
+  longitude?: number | null;
+  geocode_status?: GeocodeStatus;
+  geocode_precision?: GeocodePrecision | null;
+  geocoded_at?: string | null;
+  geocode_error?: string | null;
 } & Pick<RaRecord, "id">;
+
+export type GeocodeStatus = "pending" | "ok" | "failed" | "manual";
+export type GeocodePrecision =
+  "address" | "zipcode" | "city" | "county" | "manual";
 
 export type EmailAndType = {
   email: string;

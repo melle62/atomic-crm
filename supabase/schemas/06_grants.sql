@@ -33,6 +33,20 @@ grant all on function public.handle_company_saved() to anon;
 grant all on function public.handle_company_saved() to authenticated;
 grant all on function public.handle_company_saved() to service_role;
 
+grant all on function public.handle_company_location_changed() to anon;
+grant all on function public.handle_company_location_changed() to authenticated;
+grant all on function public.handle_company_location_changed() to service_role;
+
+revoke all on function public.geocode_reserve_slot(integer) from public;
+revoke all on function public.geocode_reserve_slot(integer) from anon;
+revoke all on function public.geocode_reserve_slot(integer) from authenticated;
+grant all on function public.geocode_reserve_slot(integer) to service_role;
+
+revoke all on function public.geocode_claim_next_company(integer) from public;
+revoke all on function public.geocode_claim_next_company(integer) from anon;
+revoke all on function public.geocode_claim_next_company(integer) from authenticated;
+grant all on function public.geocode_claim_next_company(integer) to service_role;
+
 grant all on function public.handle_contact_note_created_or_updated() to anon;
 grant all on function public.handle_contact_note_created_or_updated() to authenticated;
 grant all on function public.handle_contact_note_created_or_updated() to service_role;
@@ -113,6 +127,14 @@ grant all on table public.user_invitations to service_role;
 grant all on table public.activity_log to anon;
 grant all on table public.activity_log to authenticated;
 grant all on table public.activity_log to service_role;
+
+revoke all on table public.geocode_cache from anon;
+revoke all on table public.geocode_cache from authenticated;
+grant all on table public.geocode_cache to service_role;
+
+revoke all on table public.geocode_rate_limit from anon;
+revoke all on table public.geocode_rate_limit from authenticated;
+grant all on table public.geocode_rate_limit to service_role;
 
 grant all on table public.companies_summary to anon;
 grant all on table public.companies_summary to authenticated;

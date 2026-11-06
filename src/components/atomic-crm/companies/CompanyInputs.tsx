@@ -13,6 +13,7 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Company, Sale } from "../types";
 import { getTranslatedCompanySizeLabel } from "./getTranslatedCompanySizeLabel";
 import { sizes } from "./sizes";
+import { CompanyLocationInputs } from "../geo/CompanyLocationInputs";
 
 const isUrl = (url: string) => {
   if (!url) return;
@@ -41,6 +42,7 @@ export const CompanyInputs = () => {
         <Separator orientation={isMobile ? "horizontal" : "vertical"} />
         <div className="flex flex-col gap-8 flex-1">
           <CompanyAddressInputs />
+          <CompanyLocationInputs />
           <CompanyAdditionalInformationInputs />
         </div>
       </div>
