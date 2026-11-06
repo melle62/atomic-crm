@@ -9,8 +9,10 @@ import {
   NO_MATCH_ERROR,
   parseNominatimResponse,
   parseRequestBody,
+  photonToNominatimResponse,
   processQueue,
   queryKey,
+  toPhotonParams,
   type CompanyLocation,
   type GeoPoint,
   type GeocodeOutcome,
@@ -134,6 +136,81 @@ describe("parseNominatimResponse", () => {
     expect(parseNominatimResponse({ error: "x" })).toBeNull();
     expect(parseNominatimResponse([{ lat: "abc", lon: "1" }])).toBeNull();
     expect(parseNominatimResponse([{ lat: "95", lon: "1" }])).toBeNull();
+  });
+});
+
+describe("toPhotonParams", () => {
+  it("joins a structured address into one query, boxed to Sweden", () => {
+    expect(
+      toPhotonParams({
+        street: "Industrigatan 6",
+        postalcode: "341 50",
+        city: "Lagan",
+        countrycodes: "se",
+      }),
+    ).toEqual({
+      q: "Industrigatan 6, 341 50, Lagan",
+      limit: "1",
+      bbox: "10.5,55.0,24.5,69.5",
+    });
+  });
+
+  it("keeps free-text queries and appends a named country", () => {
+    expect(toPhotonParams({ q: "Oslo", country: "Norway" })).toEqual({
+      q: "Oslo, Norway",
+      limit: "1",
+    });
+  });
+
+  it("builds the same Photon query for each fallback level", () => {
+    const queries = buildQueries(full).map((query) =>
+      toPhotonParams(query.params),
+    );
+    expect(queries.map((query) => query.q)).toEqual([
+      "Storgatan 1, 553 18, Jönköping",
+      "553 18, Jönköping",
+      "Jönköping, Jönköpings län",
+      "Jönköpings län",
+    ]);
+  });
+});
+
+describe("photonToNominatimResponse", () => {
+  const photonHit = (countrycode: string) => ({
+    type: "FeatureCollection",
+    features: [
+      {
+        geometry: { type: "Point", coordinates: [13.9915, 56.9157] },
+        properties: {
+          name: "Industrigatan",
+          postcode: "341 50",
+          city: "Lagan",
+          country: "Sverige",
+          countrycode,
+        },
+      },
+    ],
+  });
+
+  it("converts the first feature so parseNominatimResponse can read it", () => {
+    const converted = photonToNominatimResponse(photonHit("SE"), "se");
+    expect(parseNominatimResponse(converted)).toEqual({
+      latitude: 56.9157,
+      longitude: 13.9915,
+      displayName: "Industrigatan, 341 50, Lagan, Sverige",
+    });
+  });
+
+  it("rejects a result outside the requested country", () => {
+    expect(photonToNominatimResponse(photonHit("NO"), "se")).toEqual([]);
+  });
+
+  it("treats empty or malformed responses as no match", () => {
+    expect(photonToNominatimResponse({ features: [] })).toEqual([]);
+    expect(photonToNominatimResponse({})).toEqual([]);
+    expect(photonToNominatimResponse({ features: [{ geometry: {} }] })).toEqual(
+      [],
+    );
   });
 });
 

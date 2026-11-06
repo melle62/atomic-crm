@@ -8,7 +8,9 @@ import {
   geocodeCompany,
   GeocoderUnavailableError,
   parseRequestBody,
+  photonToNominatimResponse,
   processQueue,
+  toPhotonParams,
   type CompanyLocation,
   type GeocodeOutcome,
   type GeoPoint,
@@ -28,14 +30,15 @@ const MIN_INTERVAL_MS = 1100;
 const BUDGET_MS = Number(Deno.env.get("GEOCODER_BUDGET_MS") ?? 100_000);
 const REQUEST_TIMEOUT_MS = 10_000;
 
-const fetchNominatim = async (params: Record<string, string>) => {
-  const url = new URL("/search", NOMINATIM_URL);
-  url.search = new URLSearchParams({
-    ...params,
-    format: "jsonv2",
-    limit: "1",
-    ...(CONTACT_EMAIL ? { email: CONTACT_EMAIL } : {}),
-  }).toString();
+// Fallback geocoder on the same OpenStreetMap data. Nominatim blocks many
+// hosting IP ranges (it answers HTTP 403 to our Supabase functions), so when
+// that happens we switch to Photon. Set GEOCODER_FALLBACK_URL="" to disable.
+const PHOTON_URL =
+  Deno.env.get("GEOCODER_FALLBACK_URL") ?? "https://photon.komoot.io";
+
+class GeocoderForbiddenError extends GeocoderUnavailableError {}
+
+const getJson = async (url: URL, label: string): Promise<unknown> => {
   let response: Response;
   try {
     response = await fetch(url, {
@@ -44,15 +47,56 @@ const fetchNominatim = async (params: Record<string, string>) => {
     });
   } catch (error) {
     throw new GeocoderUnavailableError(
-      `Geocoder unreachable: ${error instanceof Error ? error.message : error}`,
+      `${label} unreachable: ${error instanceof Error ? error.message : error}`,
     );
+  }
+  if (response.status === 403) {
+    throw new GeocoderForbiddenError(`${label} answered HTTP 403`);
   }
   if (!response.ok) {
     throw new GeocoderUnavailableError(
-      `Geocoder answered HTTP ${response.status}`,
+      `${label} answered HTTP ${response.status}`,
     );
   }
   return response.json();
+};
+
+const fetchNominatim = (params: Record<string, string>) => {
+  const url = new URL("/search", NOMINATIM_URL);
+  url.search = new URLSearchParams({
+    ...params,
+    format: "jsonv2",
+    limit: "1",
+    ...(CONTACT_EMAIL ? { email: CONTACT_EMAIL } : {}),
+  }).toString();
+  return getJson(url, "Geocoder");
+};
+
+const fetchPhoton = async (params: Record<string, string>) => {
+  const url = new URL("/api/", PHOTON_URL);
+  url.search = new URLSearchParams(toPhotonParams(params)).toString();
+  return photonToNominatimResponse(
+    await getJson(url, "Fallback geocoder"),
+    params.countrycodes,
+  );
+};
+
+// Once Nominatim has refused this function instance, stop asking it.
+let nominatimForbidden = false;
+
+const fetchGeocoder = async (params: Record<string, string>) => {
+  if (!nominatimForbidden) {
+    try {
+      return await fetchNominatim(params);
+    } catch (error) {
+      if (!(error instanceof GeocoderForbiddenError) || !PHOTON_URL) {
+        throw error;
+      }
+      console.warn("geocode: Nominatim refused us (403), using Photon");
+      nominatimForbidden = true;
+    }
+  }
+  return fetchPhoton(params);
 };
 
 const lookup = createCachedLookup({
@@ -92,7 +136,7 @@ const lookup = createCachedLookup({
     return Number(data ?? 0);
   },
   sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-  fetchJson: fetchNominatim,
+  fetchJson: fetchGeocoder,
 });
 
 const claimNext = async (): Promise<CompanyLocation | null> => {
