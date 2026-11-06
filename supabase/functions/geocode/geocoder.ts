@@ -168,6 +168,75 @@ export const parseNominatimResponse = (json: unknown): GeoPoint | null => {
   return { latitude, longitude, displayName };
 };
 
+// Bounding boxes (minLon, minLat, maxLon, maxLat) for country codes the app
+// restricts searches to. Photon has no country filter, so we use a box and
+// then check the country code of the result.
+const COUNTRY_BBOXES: Record<string, string> = {
+  se: "10.5,55.0,24.5,69.5",
+};
+
+/**
+ * Turns Nominatim-style search params into a Photon (photon.komoot.io)
+ * request. Photon is a fallback geocoder on the same OpenStreetMap data, used
+ * when Nominatim refuses our server (HTTP 403 for blocked hosting IPs).
+ */
+export const toPhotonParams = (
+  params: Record<string, string>,
+): Record<string, string> => {
+  const { countrycodes, country, q, street, postalcode, city } = params;
+  const text =
+    q ?? [street, postalcode, city].filter((part) => part).join(", ");
+  const query = country ? `${text}, ${country}` : text;
+  const bbox = countrycodes
+    ? COUNTRY_BBOXES[countrycodes.toLowerCase()]
+    : undefined;
+  return { q: query, limit: "1", ...(bbox ? { bbox } : {}) };
+};
+
+/**
+ * Reads the first Photon GeoJSON feature and returns it shaped like a
+ * Nominatim `jsonv2` response, so the rest of the pipeline is unchanged.
+ * A result outside the requested country counts as no match.
+ */
+export const photonToNominatimResponse = (
+  json: unknown,
+  countryCode?: string,
+): Array<{ lat: number; lon: number; display_name: string }> => {
+  const features = (json as { features?: unknown })?.features;
+  if (!Array.isArray(features) || features.length === 0) return [];
+  const feature = features[0] as {
+    geometry?: { coordinates?: unknown };
+    properties?: Record<string, unknown>;
+  };
+  const coordinates = feature?.geometry?.coordinates;
+  if (!Array.isArray(coordinates) || coordinates.length < 2) return [];
+  const properties = feature.properties ?? {};
+  const resultCountry =
+    typeof properties.countrycode === "string" ? properties.countrycode : "";
+  if (
+    countryCode &&
+    resultCountry.toLowerCase() !== countryCode.toLowerCase()
+  ) {
+    return [];
+  }
+  const displayName = [
+    properties.name,
+    properties.postcode,
+    properties.city,
+    properties.county,
+    properties.country,
+  ]
+    .filter((part): part is string => typeof part === "string" && part !== "")
+    .join(", ");
+  return [
+    {
+      lat: toNumber(coordinates[1]),
+      lon: toNumber(coordinates[0]),
+      display_name: displayName,
+    },
+  ];
+};
+
 export type CachedLookupDeps = {
   getCached: (
     key: string,
