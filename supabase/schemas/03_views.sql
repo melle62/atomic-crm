@@ -93,7 +93,13 @@ select
     c.tax_identifier,
     c.logo,
     count(distinct d.id) as nb_deals,
-    count(distinct co.id) as nb_contacts
+    count(distinct co.id) as nb_contacts,
+    c.latitude,
+    c.longitude,
+    c.geocode_status,
+    c.geocode_precision,
+    c.geocoded_at,
+    c.geocode_error
 from public.companies c
     left join public.deals d on c.id = d.company_id
     left join public.contacts co on c.id = co.company_id

@@ -131,6 +131,7 @@ User data syncs between Supabase's `auth.users` table and the CRM's `sales` tabl
 Located in `supabase/functions/`:
 - User management (creating/updating users, account disabling)
 - Inbound email webhook processing
+- Company geocoding (`geocode`): OpenStreetMap Nominatim, 1 request/s via a shared slot in `geocode_rate_limit`, results cached in `geocode_cache`. The `company_location_changed` trigger queues a company (`geocode_status = pending`) when its address changes; manual pins (`manual`) are never overwritten. Optional env vars: `GEOCODER_USER_AGENT`, `GEOCODER_EMAIL`, `GEOCODER_URL`, `GEOCODER_COUNTRY_CODE`, `GEOCODER_BUDGET_MS`.
 
 #### Data Providers
 

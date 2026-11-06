@@ -16,6 +16,7 @@ import { ResponsiveFilters } from "../misc/ResponsiveFilters";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ActiveFilterButton } from "../misc/ActiveFilterButton";
 import { AccountManagerFilter } from "../sales/AccountManagerInput";
+import { RegionFilter } from "../geo/RegionFilter";
 
 export const ContactListFilter = () => {
   const { noteStatuses } = useConfigurationContext();
@@ -159,6 +160,8 @@ export const ContactListFilter = () => {
           size={isMobile ? "lg" : undefined}
         />
       </FilterCategory>
+
+      <RegionFilter layer="contacts" />
     </ResponsiveFilters>
   );
 };

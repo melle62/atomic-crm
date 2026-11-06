@@ -22,7 +22,12 @@ const MAX_DISTANCE = 96;
  */
 const isScrollGesture = (target: EventTarget | null) => {
   let node = target instanceof Element ? target : null;
-  if (node?.closest('[role="dialog"], [data-base-ui-portal]')) {
+  // data-no-pull-to-refresh: surfaces with their own drag gesture, like the map.
+  if (
+    node?.closest(
+      '[role="dialog"], [data-base-ui-portal], [data-no-pull-to-refresh]',
+    )
+  ) {
     return true;
   }
   while (node) {

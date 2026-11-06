@@ -36,6 +36,14 @@ import {
 import generateData from "./dataGenerator";
 import type { Db } from "./dataGenerator/types";
 import { withSupabaseFilterAdapter } from "./internal/supabaseAdapter";
+import { withGeoFilters } from "../../geo/withGeoFilters";
+import { applyLocationChange } from "../../geo/locationChange";
+import type {
+  GeocodeRunResult,
+  PlaceSearchResult,
+} from "../../geo/geocodingTypes";
+
+const DEMO_GEOCODING_ERROR = "Geocoding is not available in the demo";
 
 const TASK_MARKED_AS_DONE = "TASK_MARKED_AS_DONE";
 const TASK_MARKED_AS_UNDONE = "TASK_MARKED_AS_UNDONE";
@@ -326,6 +334,39 @@ export const createDataProvider = ({
         maxResults,
       );
     },
+    // The demo has no geocoder: pending companies are marked as unplaced so
+    // they show up in the list of companies to fix by hand.
+    geocodeCompanies: async (): Promise<GeocodeRunResult> => {
+      const { data: pending } = await baseDataProvider.getList<Company>(
+        "companies",
+        {
+          filter: { geocode_status: "pending" },
+          pagination: { page: 1, perPage: 10000 },
+          sort: { field: "id", order: "ASC" },
+        },
+      );
+      await Promise.all(
+        pending.map((company) =>
+          baseDataProvider.update("companies", {
+            id: company.id,
+            data: {
+              geocode_status: "failed",
+              geocode_error: DEMO_GEOCODING_ERROR,
+            },
+            previousData: company,
+          }),
+        ),
+      );
+      return {
+        processed: pending.length,
+        placed: 0,
+        failed: pending.length,
+        remaining: 0,
+        stoppedReason: "empty",
+      };
+    },
+    searchPlace: async (_query: string): Promise<PlaceSearchResult | null> =>
+      null,
     mergeContacts: async (sourceId: Identifier, targetId: Identifier) => {
       return mergeContacts(sourceId, targetId, baseDataProvider);
     },
@@ -603,13 +644,17 @@ export const createDataProvider = ({
           return {
             ...createParams,
             data: {
-              ...createParams.data,
+              ...applyLocationChange(createParams.data),
               created_at: new Date().toISOString(),
             },
           };
         },
         beforeUpdate: async (params) => {
-          return await processCompanyLogo(params);
+          const updateParams = await processCompanyLogo(params);
+          return {
+            ...updateParams,
+            data: applyLocationChange(updateParams.data, params.previousData),
+          };
         },
         afterUpdate: async (result, dataProvider) => {
           // get all contacts of the company and for each contact, update the company_name
@@ -700,7 +745,7 @@ export const createDataProvider = ({
     ],
   ) as CrmDataProvider;
 
-  return dataProvider;
+  return withGeoFilters(dataProvider);
 };
 
 export const dataProvider = createDataProvider();

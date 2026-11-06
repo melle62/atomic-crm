@@ -17,6 +17,26 @@ const sizes = [1, 10, 50, 250, 500];
 
 const regex = /\W+/;
 
+// Demo coordinates scattered over the continental US; one in ten unplaced.
+const generateLocation = () =>
+  datatype.number(9) === 0
+    ? {
+        latitude: null,
+        longitude: null,
+        geocode_status: "failed" as const,
+        geocode_precision: null,
+        geocoded_at: null,
+        geocode_error: "No match for the address, zipcode, city or county",
+      }
+    : {
+        latitude: datatype.float({ min: 30, max: 47, precision: 0.0001 }),
+        longitude: datatype.float({ min: -120, max: -75, precision: 0.0001 }),
+        geocode_status: "ok" as const,
+        geocode_precision: "city" as const,
+        geocoded_at: new Date().toISOString(),
+        geocode_error: null,
+      };
+
 export const generateCompanies = (db: Db, size = 55): Required<Company>[] => {
   return Array.from(Array(size).keys()).map((id) => {
     const name = company.companyName();
@@ -48,6 +68,7 @@ export const generateCompanies = (db: Db, size = 55): Required<Company>[] => {
       tax_identifier: random.alphaNumeric(10),
       country: random.arrayElement(["USA", "France", "UK"]),
       context_links: [],
+      ...generateLocation(),
     };
   });
 };

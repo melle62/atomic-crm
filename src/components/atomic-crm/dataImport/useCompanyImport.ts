@@ -36,6 +36,10 @@ export function useCompanyImport(): ProcessImportBatch {
               description: toText(row.description),
               revenue: toText(row.revenue),
               tax_identifier: toText(row.tax_identifier),
+              // Optional: a company imported with coordinates keeps them as a
+              // manual pin; without them it is queued for geocoding.
+              latitude: toNumber(row.latitude),
+              longitude: toNumber(row.longitude),
               sales_id: identity?.id,
               created_at: new Date().toISOString(),
             },

@@ -33,6 +33,11 @@ create or replace trigger company_saved
     before insert or update on public.companies
     for each row execute function public.handle_company_saved();
 
+-- Queue a company for geocoding when its address changes (manual pins are kept)
+create or replace trigger company_location_changed
+    before insert or update on public.companies
+    for each row execute function public.handle_company_location_changed();
+
 -- Lowercase contact emails before insert or update (must run before contact_saved)
 create or replace trigger "10_lowercase_contact_emails"
     before insert or update on public.contacts
