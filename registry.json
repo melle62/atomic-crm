@@ -520,6 +520,46 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/map/useMapData.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/map/useGeocodeRun.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/map/mapSearchParams.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/map/mapModel.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/map/UnplacedCompanies.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/map/RegionSummary.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/map/MarkerCard.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/map/MapPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/map/MapFilters.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/map/MapCanvas.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/login/authConfig.ts",
           "type": "registry:component"
         },
@@ -589,6 +629,46 @@
         },
         {
           "path": "src/components/atomic-crm/layout/FormToolbar.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/layout/AppLogo.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/geo/withGeoFilters.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/geo/useCompanyPlaces.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/geo/locationChange.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/geo/geocodingTypes.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/geo/geoFilter.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/geo/RegionFilter.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/geo/RegionFields.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/geo/MultiSelect.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/geo/CompanyLocationInputs.tsx",
           "type": "registry:component"
         },
         {
