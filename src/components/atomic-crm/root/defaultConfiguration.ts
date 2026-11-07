@@ -5,11 +5,12 @@ import type {
 // Import the logos as module assets so Vite resolves their URL relative to the
 // JS chunk (import.meta.url), not the current route. A plain "./logos/..." path
 // breaks on nested routes like /oauth/consent and under a deployment sub-path.
-import darkModeLogo from "./logos/logo_atomic_crm_dark.svg";
-import lightModeLogo from "./logos/logo_atomic_crm_light.svg";
+// The Brifex app icon (brand-green symbol) reads on both light and dark
+// backgrounds, so it serves as both the light- and dark-mode logo.
+import brifexIcon from "./logos/brifex_icon.svg";
 
-export const defaultDarkModeLogo = darkModeLogo;
-export const defaultLightModeLogo = lightModeLogo;
+export const defaultDarkModeLogo = brifexIcon;
+export const defaultLightModeLogo = brifexIcon;
 
 export const defaultLogoStyle: LogoStyle = "icon";
 
